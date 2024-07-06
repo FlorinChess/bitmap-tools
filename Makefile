@@ -1,7 +1,7 @@
-CC            := clang
+COMPILER      := gcc
 CCFLAGS       := -Wall -Wextra -Wuninitialized -pedantic -std=c17 -g3 -Og
-ASSIGNMENT    := a3
-.DEFAULT_GOAL := help
+PROGRAM       := bmp
+.DEFAULT_GOAL := bin
 
 TESTRUNNER_FLAGS := -c test.toml
 TESTRUNNER_EXECUTABLE := ../testrunner
@@ -12,42 +12,16 @@ TESTRUNNER_EXECUTABLE := ../testrunner
 
 clean:			## cleans up project folder
 	@echo "[\033[36mINFO\033[0m] Cleaning up folder..."
-	rm -f $(ASSIGNMENT)
-	rm -f $(ASSIGNMENT).so
-	rm -rf testreport.html
-	rm -rf ./valgrind_logs
-	rm -rf result.html
+	rm -f $(PROGRAM)
+	rm -f $(PROGRAM).so
+	find ./pictures/ -type f -name "*.txt" -print0 | xargs -0 rm
 
 bin:			## compiles project to executable binary
 	@echo "[\033[36mINFO\033[0m] Compiling binary..."
-	chmod +x ./$(TESTRUNNER_EXECUTABLE)
-	$(CC) $(CCFLAGS) -o $(ASSIGNMENT) $(ASSIGNMENT).c
-	chmod +x $(ASSIGNMENT)
+	$(COMPILER) $(CCFLAGS) -o $(PROGRAM) main.c
+	chmod +x $(PROGRAM)
 
 all: clean bin 	## all of the above
-
-run: all		## runs the project with default config
-	@echo "[\033[36mINFO\033[0m] Executing binary..."
-	./$(ASSIGNMENT)
-
-test: all		## runs public testcases on the project
-	@echo "[\033[36mINFO\033[0m] Executing testrunner..."
-	./$(TESTRUNNER_EXECUTABLE) $(TESTRUNNER_FLAGS)
-testopen: all
-	@echo "[\033[36mINFO\033[0m] Executing testrunner..."
-	./$(TESTRUNNER_EXECUTABLE) $(TESTRUNNER_FLAGS) -b
-	
-testbychar: all             ## runs public testcases on the project compares output char by char
-	@echo "[\033[36mINFO\033[0m] Executing testrunner..."
-	./$(TESTRUNNER_EXECUTABLE) $(TESTRUNNER_FLAGS) -m c
-
-testbyword: all             ## runs public testcases on the project compares output word by word
-	@echo "[\033[36mINFO\033[0m] Executing testrunner..."
-	./$(TESTRUNNER_EXECUTABLE) $(TESTRUNNER_FLAGS) -m w
-	
-testprint: all             ## runs public testcases on the project compares output line by line, prints to terminal
-	@echo "[\033[36mINFO\033[0m] Executing testrunner..."
-	./$(TESTRUNNER_EXECUTABLE) $(TESTRUNNER_FLAGS) -v
 	
 help:			## prints the help text
 	@echo "Usage: make \033[36m<TARGET>\033[0m"
