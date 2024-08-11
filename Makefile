@@ -18,7 +18,7 @@ clean:			## cleans up project folder
 
 bin:			## compiles project to executable binary
 	@echo "[\033[36mINFO\033[0m] Compiling binary..."
-	$(COMPILER) $(CCFLAGS) -o $(PROGRAM) main.c
+	$(COMPILER) $(CCFLAGS) -o $(PROGRAM) src/main.c
 	chmod +x $(PROGRAM)
 
 all: clean bin 	## all of the above
