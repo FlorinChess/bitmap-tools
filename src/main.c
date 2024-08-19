@@ -1,12 +1,14 @@
+#include "definitions.h"
+#include "bitmap.h"
+#include "error.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
 #include <stdint.h>
-#include <ctype.h>
-#include "definitions.h"
-#include "error.h"
-#include "bitmap.h"
+#include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/types.h>
 
 size_t max_message_length_ = 0;
 LayerCollection layer_collection_;
@@ -274,6 +276,14 @@ void freePointerArray(char** pointer_array)
   free(pointer_array);
 }
 
+void lengthToString(size_t length, char buffer[4])
+{
+  buffer[0] = '0' + (length / 1000) % 10;
+  buffer[1] = '0' + (length / 100) % 10;
+  buffer[2] = '0' + (length / 10) % 10;
+  buffer[3] = '0' + (length % 10);
+}
+
 ErrorCode parseTextFile(FILE* file)
 {
   rewind(file);
@@ -528,6 +538,67 @@ void printBinary(unsigned char byte)
   printf("\n");
 }
 
+int cp(const char *to, const char *from)
+{
+  int fd_to, fd_from;
+  char buf[4096];
+  ssize_t nread;
+  int saved_errno;
+
+  fd_from = open(from, O_RDONLY);
+  if (fd_from < 0)
+    return -1;
+
+  fd_to = open(to, O_WRONLY | O_CREAT | O_EXCL, 0666);
+  if (fd_to < 0)
+    goto out_error;
+
+  while (nread = read(fd_from, buf, sizeof buf), nread > 0)
+  {
+    char *out_ptr = buf;
+    ssize_t nwritten;
+
+    do 
+    {
+      nwritten = write(fd_to, out_ptr, nread);
+
+      if (nwritten >= 0)
+      {
+        nread -= nwritten;
+        out_ptr += nwritten;
+      }
+      else if (errno != EINTR)
+      {
+        goto out_error;
+      }
+    } 
+    while (nread > 0);
+  }
+
+  if (nread == 0)
+  {
+      if (close(fd_to) < 0)
+      {
+          fd_to = -1;
+          goto out_error;
+      }
+      close(fd_from);
+
+      /* Success! */
+      return 0;
+  }
+
+out_error:
+  saved_errno = errno;
+
+  close(fd_from);
+  if (fd_to >= 0)
+    close(fd_to);
+
+  errno = saved_errno;
+  return -1;
+}
+
 ErrorCode decode(char* file_path)
 {
   FILE* file = fopen(file_path, "rb");
@@ -544,40 +615,70 @@ ErrorCode decode(char* file_path)
     return INVALID_FILE;
   }
 
-  int position_image_array = *(int*)&header[0x0a]; // 0x0a => 10
+  int position_image_array = *(int*)&header[0x0A]; // 0x0a => 10
+  int width_pixels =         *(int*)&header[0x12]; // 0x12 => 18
+  int height_pixels =        *(int*)&header[0x16]; // 0x16 => 22
+  int padding = width_pixels % 4;
   fseek(file, position_image_array, SEEK_SET);
 
-  uint8_t buffer[BMP_PREFIX_SIZE * 8];
-  fread_return = fread(buffer, sizeof(char), sizeof(buffer), file);
+  char* malloc_buffer = malloc(10 * 1024 * 1024);
+  int buffer_index = 0;
 
-  char prefix[BMP_PREFIX_SIZE] = {0};
-  int prefix_index = 0;
-  int shift = 7;
-
-  for (size_t i = 0; i < BMP_PREFIX_SIZE * 8; i++)
-  { 
-    // printf("prefix[%d] = ", prefix_index);
-    // printBinary(prefix[prefix_index]);
-    printf("buffer[%zu] = ", i);
-    printBinary(buffer[i]);
-    
-    prefix[prefix_index] |= (buffer[i] & 0x01) << shift;
-
-    shift = (shift == 0) ? 7 : shift - 1;
-
-    if (shift == 7)
+  for (int row = 0; row < height_pixels; row++)
+  {
+    for (int column = 0; column < width_pixels; column++)
     {
-      // printBinary(prefix[prefix_index]);
-      prefix_index++;
+      fread_return = fread(malloc_buffer + buffer_index, sizeof(char), 3, file);
+
+      if (fread_return != 3)
+      {
+        fclose(file);
+        return INVALID_FILE;
+      }
+
+      buffer_index += 3;
+   }
+
+   fseek(file, padding, SEEK_CUR);
+  }
+
+  buffer_index = 0;
+  char bmp_prefix_buffer[BMP_PREFIX_SIZE] = {0};
+
+  for (size_t i = 0; i < BMP_PREFIX_SIZE; i++)
+  {
+    for (size_t j = 0; j < 8; j++)
+    {
+      char bit_to_decode = malloc_buffer[buffer_index++] & 0x01;
+      bmp_prefix_buffer[i] = (bmp_prefix_buffer[i] << 1) | bit_to_decode;
     }
   }
 
-  // for (int i = 0; i < BMP_PREFIX_SIZE; i++) 
-  // {
-  //   printf("%02x ", (unsigned char)prefix[i]);
-  // }
+  char length_buffer[5] = {0}; 
+  memcpy(length_buffer, bmp_prefix_buffer + 3, 4);
 
-  printf("\n");
+  size_t length = atoi(length_buffer);
+
+  printf("message length = %ld\n", length);
+
+  char message_buffer[length + 1];
+  memset(message_buffer, 0, sizeof(message_buffer));
+
+  for (size_t i = 0; i < length; i++)
+  {
+    for (size_t j = 0; j < 8; j++)
+    {
+      char bit_to_decode = malloc_buffer[buffer_index++] & 0x01;
+
+      message_buffer[i] = (message_buffer[i] << 1) | bit_to_decode;
+    }
+  }
+
+  message_buffer[length] = '\0';
+
+  printf("Your secret messsage is: %s\n", message_buffer);
+
+  free(malloc_buffer);
   
   fclose(file);
 
@@ -586,16 +687,14 @@ ErrorCode decode(char* file_path)
 
 ErrorCode encode(char* file_path, char* message)
 {
-  FILE* file = fopen(file_path, "rb+");
+  char* output_file = "output.bmp"; 
+
+  cp(output_file, file_path);
+
+  FILE* file = fopen(output_file, "rb+");
 
   if (file == NULL)
     return CANNOT_OPEN_FILE;
-
-  BitmapFileHeader file_header;
-  BitmapInfoHeader info_header;
-
-  fread(&file_header, sizeof(BitmapFileHeader), 1, file);
-  fread(&info_header, sizeof(info_header), 1, file);
 
   uint8_t header[BMP_HEADER_SIZE];
   size_t fread_return = fread(header, sizeof(uint8_t), BMP_HEADER_SIZE, file);
@@ -606,103 +705,111 @@ ErrorCode encode(char* file_path, char* message)
     return INVALID_FILE;
   }
 
-  int position_image_array = *(int*)&header[0x0a]; // 0x0a => 10
-  printf("position = %p\n", (void*)position_image_array);
-  fseek(file, position_image_array, SEEK_SET);
-
-  int message_length = strlen(message);
-  size_t size_to_encode_in_bits = (BMP_PREFIX_SIZE + message_length) * 8;
-
-  printf("String to encode: \"BMP%04d%s\"\n", message_length, message);
-  printf("Actual length to encode in bytes: %ld\n", size_to_encode_in_bits);
-
-  char prefix[BMP_PREFIX_SIZE] = {0};
-
-  memcpy(prefix, "BMP", 3);
-  memcpy(prefix + 3, &message_length, sizeof(int));
-
-  for (int i = 0; i < BMP_PREFIX_SIZE; i++) 
+  // Check magic number
+  if (header[0] != 'B' || header[1] != 'M')
   {
-    printf("%02x ", (unsigned char)prefix[i]);
+    fclose(file);
+    return BITMAP_FILE_CORRUPTED;
   }
 
-  uint8_t buffer[size_to_encode_in_bits];
-  fread_return = fread(buffer, sizeof(char), sizeof(buffer), file);
+  int file_size =            *(int*)&header[0x02]; // 0x02 => 2
+  int position_image_array = *(int*)&header[0x0A]; // 0x0a => 10
+  int info_header_size =     *(int*)&header[0x0E];
+  int width_pixels =         *(int*)&header[0x12]; // 0x12 => 18
+  int height_pixels =        *(int*)&header[0x16]; // 0x16 => 22
+  short bits_per_pixel =   *(short*)&header[0x1C]; // 0x1C => 28
+  int padding = width_pixels % 4;
 
-  int prefix_index = 0;
-  int shift = 7;
-  int message_index = 0;
+  printf("width = %d, height = %d\n", width_pixels, height_pixels);
 
-  for (size_t i = 0; i < size_to_encode_in_bits; i++)
-  {
-    if (prefix_index < BMP_PREFIX_SIZE)
-    {
-      if (shift == 7)
-      {
-        printf("Char to encode = %c ", prefix[prefix_index]);
-        printBinary(prefix[prefix_index]);
-      }
+  printf("BMP size (bytes) = %d info header size = %d, bits_per_pixel = %d\n", file_size, info_header_size, bits_per_pixel);
 
-      uint8_t bit_to_encode = (prefix[prefix_index] >> shift) & 0x01;
-      printf("Bit to encode = %d\n", bit_to_encode);
-      printf("buffer[%zu] before encoding = ", i);
-      printBinary(buffer[i]);
-
-      // Clear bit if already set
-      buffer[i] = buffer[i] & ~0x01;
-
-      // Set the last bit as the given bit to encode
-      buffer[i] = buffer[i] | bit_to_encode;
-
-      printf("buffer[%zu] after encoding =  ", i);
-      printBinary(buffer[i]);
-
-      shift = (shift == 0) ? 7 : shift - 1;
-
-      if (shift == 7)
-      {
-        prefix_index++;
-      }
-    }
-
-    if (message_index < message_length)
-    {
-      if (shift == 7)
-      {
-        printf("Char to encode = %c ", message[message_index]);
-        printBinary(message[message_index]);
-      }
-
-      uint8_t bit_to_encode = (message[message_index] >> shift) & 0x01;
-      printf("Bit to encode = %d\n", bit_to_encode);
-      printf("buffer[%zu] before encoding = ", i);
-      printBinary(buffer[i]);
-
-      // Clear bit if already set
-      buffer[i] = buffer[i] & ~0x01;
-
-      // Set the last bit as the given bit to encode
-      buffer[i] = buffer[i] | bit_to_encode;
-
-      printf("buffer[%zu] after encoding =  ", i);
-      printBinary(buffer[i]);
-
-      shift = (shift == 0) ? 7 : shift - 1;
-
-      if (shift == 7)
-        message_index++;
-    }
-  }
-
-  // Move to where the array starts
   fseek(file, position_image_array, SEEK_SET);
 
-  // Write the slightly modified data
-  fwrite(buffer, sizeof(char), sizeof(buffer), file);  
+  unsigned char* malloc_buffer = malloc(20 * 1024 * 1024);
+  int buffer_index = 0;
+  for (int row = 0; row < height_pixels; row++)
+  {
+    fread_return = fread(malloc_buffer + buffer_index, sizeof(char), 3 * width_pixels, file);
 
-  // Flush the changes
-  fflush(file);
+    if (fread_return != (size_t)(3 * width_pixels))
+    {
+      fclose(file);
+      return INVALID_FILE;
+    }
+    
+    buffer_index += 3 * width_pixels;
 
+    fseek(file, padding, SEEK_CUR);
+  }
+
+  size_t message_length = strlen(message);
+  
+  char bmp_prefix[] = "BMP";
+  char message_length_string[4];
+  lengthToString(message_length, message_length_string);
+
+  char* message_to_encode = malloc(BMP_PREFIX_SIZE + message_length);
+
+  memcpy(message_to_encode, bmp_prefix, 3);
+  memcpy(message_to_encode + 3, message_length_string, 4);
+  memcpy(message_to_encode + 7, message, message_length);
+
+  size_t char_index = 0;
+  ssize_t bit_index = 7;
+  size_t wbuffer_index = 0;
+
+  // Add message to the byte array
+  while(char_index < BMP_PREFIX_SIZE + message_length)
+  {
+    char bit_to_encode = (message_to_encode[char_index] >> bit_index--) & 0x01;
+
+    if (bit_index < 0)
+    {
+      bit_index = 7;
+      char_index++;
+    }
+
+    // clear LSB and store bit to encode into it
+    malloc_buffer[wbuffer_index] &= ~0x01;
+    malloc_buffer[wbuffer_index] |= bit_to_encode;
+
+    wbuffer_index++;
+  }
+
+  size_t bytes_to_encode = wbuffer_index;
+  wbuffer_index = 0;
+
+  // Rewind to pixel array start and rewrite modified bytes
+  fseek(file, position_image_array, SEEK_SET);
+  for (int row = 0; row < height_pixels; row++)
+  {
+    for (int column = 0; column < width_pixels; column++)
+    {
+      if (wbuffer_index >= bytes_to_encode)
+        goto writting_finished;
+
+      size_t return_value = fwrite(malloc_buffer + wbuffer_index, sizeof(char), 3, file);
+
+      if (return_value != 3)
+      {
+        printf("Error occured when writting!! wbuffer_index = %lu\n", wbuffer_index);
+        free(malloc_buffer);
+        free(message_to_encode);
+        fclose(file);
+        exit(-1);
+      }
+      
+      wbuffer_index += 3;
+   }
+
+   fseek(file, padding, SEEK_CUR);
+  }
+
+  writting_finished:
+
+  free(malloc_buffer);
+  free(message_to_encode);
   fclose(file);
 
   return SUCCESS;
