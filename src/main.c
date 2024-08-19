@@ -870,7 +870,7 @@ void printHelpMessage()
     "Options:\n"
     " -h, --help       Display this help message\n"
     " -a, --ascii      Convert bitmap images to ASCII art\n"
-    " -g, --grayscale  Turn bitmap images into grayscale\n"
+    //" -g, --grayscale  Turn bitmap images into grayscale\n"
     " -d, --decode     Decode secret message from the bitmap file\n"
     " -e, --encode     Encode secret message into the bitmap file\n"
     );
