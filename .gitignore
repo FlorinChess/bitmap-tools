@@ -4,4 +4,3 @@ pictures/*.txt
 # exclude test files for now
 test.c
 test
-dali_test.bmp
