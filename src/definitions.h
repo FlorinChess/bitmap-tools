@@ -53,11 +53,6 @@ Layer* createLayer(size_t width, size_t height);
 /// @returns The new matrix.
 char** createLayerPixels(size_t width, size_t height);
 char* getInput();
-char** getUserInput();
-size_t getLength(char** data);
-bool isCharNumber(char character);
-bool isStringumber(char* string);
-bool isInitialUserInputValid(char** user_input);
 void freeUserInput(char** user_input);
 
 ///
