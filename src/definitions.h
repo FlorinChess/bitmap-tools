@@ -52,15 +52,13 @@ Layer* createLayer(size_t width, size_t height);
 ///
 /// @returns The new matrix.
 char** createLayerPixels(size_t width, size_t height);
-char* getInput();
-void freeUserInput(char** user_input);
 
 ///
-/// This function frees a char* array.
+/// This function retrievs input from the user as a char* and allocates it on the heap.
 ///
-/// @param pointer_array The char* array.
-///
-void freePointerArray(char** pointer_array);
+/// @returns The user input.
+//
+char* getInput();
 
 ///
 /// This function reads a .bmp file and creates a layer of all the pixels in it converted to ASCII characters.

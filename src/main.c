@@ -64,12 +64,6 @@ char** createLayerPixels(size_t width, size_t height)
   return pixels;
 }
 
-
-///
-/// This function retrievs input from the user as a char* and allocates it on the heap.
-///
-/// @returns The user input.
-//
 char* getInput()
 {
   int i = 0;
@@ -102,37 +96,6 @@ char* getInput()
     return NULL;
   user_input[i] = '\0';
   return user_input;
-}
-
-///
-/// This function frees the user input.
-///
-/// @param user_input The user input.
-///
-//
-void freeUserInput(char** user_input)
-{
-  if (user_input == NULL)
-    return;
-
-  for (size_t word = 0; user_input[word] != NULL; word++)
-  {
-    free(user_input[word]);
-  }
-
-  free(user_input);
-
-  user_input = NULL;
-}
-
-void freePointerArray(char** pointer_array)
-{
-  for (size_t word = 0; pointer_array[word] != NULL; word++)
-  {
-    free(pointer_array[word]);
-  }
-
-  free(pointer_array);
 }
 
 void lengthToString(size_t length, char buffer[4])
