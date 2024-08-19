@@ -1,6 +1,7 @@
 COMPILER      := gcc
 CCFLAGS       := -Wall -Wextra -Wuninitialized -pedantic -std=c17 -g3 -Og
 PROGRAM       := bmp
+BUILD_FOLDER  := build
 .DEFAULT_GOAL := bin
 
 TESTRUNNER_FLAGS := -c test.toml
@@ -17,9 +18,11 @@ clean:			## cleans up project folder
 	find ./pictures/ -type f -name "*.txt" -print0 | xargs -0 rm
 
 bin:			## compiles project to executable binary
+	@echo "[\033[36mINFO\033[0m] Creating build folder..."
+	mkdir -p $(BUILD_FOLDER)
 	@echo "[\033[36mINFO\033[0m] Compiling binary..."
-	$(COMPILER) $(CCFLAGS) -o $(PROGRAM) src/main.c
-	chmod +x $(PROGRAM)
+	$(COMPILER) $(CCFLAGS) -o ./$(BUILD_FOLDER)/$(PROGRAM) ./src/main.c
+	chmod +x ./$(BUILD_FOLDER)/$(PROGRAM)
 
 all: clean bin 	## all of the above
 	
