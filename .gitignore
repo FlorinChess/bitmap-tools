@@ -1,5 +1,6 @@
 .vscode
 pictures/*.txt
+build
 
 # exclude test files for now
 test.c
