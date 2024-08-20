@@ -360,6 +360,30 @@ void printBinary(unsigned char byte)
   printf("\n");
 }
 
+bool isCharNumber(char character)
+{
+  if (character < '0' || character > '9')
+  {
+    return false;
+  }
+
+  return true;
+}
+
+bool isBitmapPrefixValid(char bitmap_prefix[BMP_PREFIX_SIZE])
+{
+  printf("Checking encoding...\n");
+
+  if (strncmp(bitmap_prefix, "BMP", 3) != 0)
+    return false;
+
+  for (size_t i = 3; i < BMP_PREFIX_SIZE; ++i)
+    if (!isCharNumber(bitmap_prefix[i]))
+      return false;
+
+  return true;
+}
+
 int cp(const char *to, const char *from)
 {
   int fd_to, fd_from;
@@ -476,14 +500,21 @@ ErrorCode decode(char* file_path)
     }
   }
 
+  if (!isBitmapPrefixValid(bmp_prefix_buffer))
+  {
+    free(malloc_buffer);
+    fclose(file);
+    return INVALID_BMP_PREFIX;
+  }
+
+  printf("Valid encoding\n");
+
   char length_buffer[5] = {0}; 
   memcpy(length_buffer, bmp_prefix_buffer + 3, 4);
 
   size_t length = atoi(length_buffer);
 
-  printf("message length = %ld\n", length);
-
-  char message_buffer[length + 1];
+  char message_buffer[length + NULL_BYTE];
   memset(message_buffer, 0, sizeof(message_buffer));
 
   for (size_t i = 0; i < length; i++)
@@ -498,10 +529,14 @@ ErrorCode decode(char* file_path)
 
   message_buffer[length] = '\0';
 
-  printf("Your secret messsage is: %s\n", message_buffer);
+  printf(
+    "--------------------------------------------\n"
+    "Message length:  %ld characters\n" 
+    "Message content: %s\n"
+    "--------------------------------------------\n",
+    length, message_buffer);
 
   free(malloc_buffer);
-  
   fclose(file);
 
   return SUCCESS;
@@ -535,17 +570,16 @@ ErrorCode encode(char* file_path, char* message)
     return BITMAP_FILE_CORRUPTED;
   }
 
-  int file_size =            *(int*)&header[0x02]; // 0x02 => 2
+  // int file_size =            *(int*)&header[0x02]; // 0x02 => 2
   int position_image_array = *(int*)&header[0x0A]; // 0x0a => 10
-  int info_header_size =     *(int*)&header[0x0E];
+  // int info_header_size =     *(int*)&header[0x0E];
   int width_pixels =         *(int*)&header[0x12]; // 0x12 => 18
   int height_pixels =        *(int*)&header[0x16]; // 0x16 => 22
-  short bits_per_pixel =   *(short*)&header[0x1C]; // 0x1C => 28
+  // short bits_per_pixel =   *(short*)&header[0x1C]; // 0x1C => 28
   int padding = width_pixels % 4;
 
-  printf("width = %d, height = %d\n", width_pixels, height_pixels);
-
-  printf("BMP size (bytes) = %d info header size = %d, bits_per_pixel = %d\n", file_size, info_header_size, bits_per_pixel);
+  // printf("width = %d, height = %d\n", width_pixels, height_pixels);
+  // printf("BMP size (bytes) = %d info header size = %d, bits_per_pixel = %d\n", file_size, info_header_size, bits_per_pixel);
 
   fseek(file, position_image_array, SEEK_SET);
 
@@ -688,7 +722,7 @@ ErrorCode convertFilesToASCII(char* file_paths[])
 void printHelpMessage()
 {
   printf(
-    "Usage: converter <option> <bmp-file(s)>\n"
+    "Usage: bmp <option> <bmp-file(s)>\n"
     "Converts a bitmap file into ASCII art and saves in a text file.\n"
     "Options:\n"
     " -h, --help       Display this help message\n"
@@ -718,6 +752,9 @@ void handleIfError(ErrorCode error_code)
     break;
   case INVALID_FILE:
     printf("Invalid file(s)!\n\n");
+    break;
+  case INVALID_BMP_PREFIX:
+    printf("Invalid encoding!\n\n");
     break;
   case OUT_OF_MEMORY:
     printf("Program ran out of memory!\n\n");
@@ -805,8 +842,6 @@ int main(int argc, char* argv[])
   }
   else if (strcmp(option, "-d") == 0 || strcmp(option, "--decode") == 0)
   {
-    printf("decode\n");
-
     handleIfError(checkParameters(argv + 2, argc));
 
     handleIfError(decode(argv[2]));
@@ -814,8 +849,6 @@ int main(int argc, char* argv[])
   }
   else if (strcmp(option, "-e") == 0 || strcmp(option, "--encode") == 0)
   {
-    printf("encode\n");
-
     handleIfError(checkParameters(argv + 2, argc));
 
     handleIfError(getMessageMaxLength(argv[2])); 
