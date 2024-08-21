@@ -60,6 +60,8 @@ char** createLayerPixels(size_t width, size_t height);
 //
 char* getInput();
 
+void lengthToString(size_t length, char buffer[4]);
+
 ///
 /// This function reads a .bmp file and creates a layer of all the pixels in it converted to ASCII characters.
 /// The new layer is added to the layer collection.
@@ -71,6 +73,14 @@ char* getInput();
 ///   OUT_OF_MEMROY
 ///   SUCCESS
 ErrorCode parseBinaryFile(char* file_path);
+
+///
+/// This function saves a layer to a .txt file.
+///
+/// @param file_path The name of the save file.
+/// @param layer The layer to be saved.
+///
+ErrorCode saveLayerToFile(char* file_path, int layer_index);
 
 ///
 /// This function adds a new layer to the layer collection.
@@ -114,12 +124,26 @@ int pixelRGBToGrayscaleValue(Pixel* pixel);
 ///
 char convertGrayscaleToSymbol(int grayscale_value);
 
-///
-/// This function saves a layer to a .txt file.
-///
-/// @param file_path The name of the save file.
-/// @param layer The layer to be saved.
-///
-ErrorCode saveLayerToFile(char* file_path, int layer_index);
+char* getFilePathWithoutExtension(char* file_path);
+
+void printBinary(unsigned char byte);
+
+bool isCharNumber(char character);
+
+bool isBitmapPrefixValid(char bitmap_prefix[BMP_PREFIX_SIZE]);
+
+int cp(const char* to, const char* from);
+
+ErrorCode decode(char* file_path);
+
+ErrorCode encode(char* file_path, char* message);
+
+void printHelpMessage();
+
+void handleIfError(ErrorCode error_code);
+
+ErrorCode checkParameters(char* parameters[], const size_t const);
+
+bool isUserInputValid(char* user_input);
 
 #endif // DEFINITIONS_H
