@@ -4,12 +4,7 @@ PROGRAM       := bmp
 BUILD_FOLDER  := build
 .DEFAULT_GOAL := bin
 
-TESTRUNNER_FLAGS := -c test.toml
-TESTRUNNER_EXECUTABLE := ../testrunner
-
 .PHONY: reset clean bin all run test help
-
-
 
 clean:			## cleans up project folder
 	@echo "[\033[36mINFO\033[0m] Cleaning up folder..."
