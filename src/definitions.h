@@ -126,8 +126,6 @@ char convertGrayscaleToSymbol(int grayscale_value);
 
 char* getFilePathWithoutExtension(char* file_path);
 
-void printBinary(unsigned char byte);
-
 bool isCharNumber(char character);
 
 bool isBitmapPrefixValid(char bitmap_prefix[BMP_PREFIX_SIZE]);
@@ -142,7 +140,7 @@ void printHelpMessage();
 
 void handleIfError(ErrorCode error_code);
 
-ErrorCode checkParameters(char* parameters[], const size_t const);
+ErrorCode checkParameters(char* parameters[], const size_t count);
 
 bool isUserInputValid(char* user_input);
 

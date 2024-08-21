@@ -1,5 +1,4 @@
 #include "definitions.h"
-#include "bitmap.h"
 #include "error.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,6 +8,10 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/types.h>
+
+#ifdef DEBUG
+#include "debug.h"
+#endif
 
 size_t max_message_length_ = 0;
 LayerCollection layer_collection_;
@@ -348,16 +351,6 @@ char* getFilePathWithoutExtension(char* file_path)
     }
   }
   return file_path;
-}
-
-void printBinary(unsigned char byte) 
-{
-  // Iterate over each bit from most significant to least significant
-  for (int i = 7; i >= 0; i--) {
-      // Print '1' if the i-th bit is set, '0' otherwise
-      printf("%c", (byte & (1 << i)) ? '1' : '0');
-  }
-  printf("\n");
 }
 
 bool isCharNumber(char character)
