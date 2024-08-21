@@ -723,7 +723,7 @@ void printHelpMessage()
 {
   printf(
     "Usage: bmp <option> <bmp-file(s)>\n"
-    "Converts a bitmap file into ASCII art and saves in a text file.\n"
+    "Encode and decode hidden messages into bitmap image files. Can be used to convert bitmap files into ASCII art.\n"
     "Options:\n"
     " -h, --help       Display this help message\n"
     " -a, --ascii      Convert bitmap images to ASCII art\n"
