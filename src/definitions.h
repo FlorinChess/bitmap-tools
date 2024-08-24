@@ -128,13 +128,7 @@ char* getFilePathWithoutExtension(char* file_path);
 
 bool isCharNumber(char character);
 
-bool isBitmapPrefixValid(char bitmap_prefix[BMP_PREFIX_SIZE]);
-
 int cp(const char* to, const char* from);
-
-ErrorCode decode(char* file_path);
-
-ErrorCode encode(char* file_path, char* message);
 
 void printHelpMessage();
 

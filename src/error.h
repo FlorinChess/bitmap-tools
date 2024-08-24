@@ -1,7 +1,7 @@
 #ifndef ERROR_H
 #define ERROR_H
 
-typedef enum
+typedef enum _ErrorCode_
 {
   SUCCESS,
   CANNOT_EXECUTE_COMMAND,

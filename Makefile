@@ -16,7 +16,7 @@ bin:			## compiles project to executable binary
 	@echo "[\033[36mINFO\033[0m] Creating build folder..."
 	mkdir -p $(BUILD_FOLDER)
 	@echo "[\033[36mINFO\033[0m] Compiling binary..."
-	$(COMPILER) $(CCFLAGS) -o ./$(BUILD_FOLDER)/$(PROGRAM) ./src/main.c
+	$(COMPILER) $(CCFLAGS) -o ./$(BUILD_FOLDER)/$(PROGRAM) ./src/main.c ./src/bitmap.c
 	chmod +x ./$(BUILD_FOLDER)/$(PROGRAM)
 
 all: clean bin 	## all of the above
