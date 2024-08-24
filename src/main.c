@@ -187,7 +187,7 @@ ErrorCode parseBinaryFile(char* file_path)
   if (header[0] != 'B' || header[1] != 'M')
   {
     fclose(file);
-    return BITMAP_FILE_CORRUPTED;
+    return INVALID_FILE;
   }
 
   int width_pixels =  *(int*)&header[0x12]; // 0x12 => 18
@@ -672,26 +672,28 @@ ErrorCode getMessageMaxLength(char* file_path)
   if (file == NULL)
     return CANNOT_OPEN_FILE;
 
-  uint8_t header[BMP_HEADER_SIZE];
-  size_t fread_return = fread(header, sizeof(uint8_t), BMP_HEADER_SIZE, file);
-
-  if (fread_return != sizeof(header))
+  BitmapFileHeader file_header;
+  BitmapInfoHeader info_header;
+  
+  if (fread(&file_header, sizeof(char), sizeof(BitmapFileHeader), file) != sizeof(BitmapFileHeader))
+  {
+    fclose(file);
+    return INVALID_FILE;
+  } 
+    
+  if (fread(&info_header, sizeof(char), sizeof(BitmapInfoHeader), file) != sizeof(BitmapInfoHeader))
   {
     fclose(file);
     return INVALID_FILE;
   }
 
-  // Check magic number
-  if (header[0] != 'B' || header[1] != 'M')
+  if (strncmp(file_header.magic_word_, BMP_MAGIC_WORD, 2) != 0)
   {
     fclose(file);
-    return BITMAP_FILE_CORRUPTED;
+    return INVALID_FILE;
   }
 
-  unsigned width_pixels =  *(int*)&header[0x12]; // 0x12 => 18
-  unsigned height_pixels = *(int*)&header[0x16]; // 0x16 => 22
-
-  max_message_length_ = (((width_pixels * height_pixels) * 3) / 8) - BMP_PREFIX_SIZE;
+  max_message_length_ = (((info_header.bitmap_width_ * info_header.bitmap_height_) * 3) / 8) - BMP_PREFIX_SIZE;
 
   fclose(file);
 
@@ -740,29 +742,35 @@ void handleIfError(ErrorCode error_code)
 {
   switch (error_code)
   {
-  case INVALID_USAGE:
-    printf("Invalid usage!\n\n");
+  case SUCCESS:
+    return;
     break;
   case INVALID_FILE:
     printf("Invalid file(s)!\n\n");
     break;
+  case INVALID_USAGE:
+    printf("Invalid usage!\n\n");
+    break;
+  case INVALID_OPTION:
+    printf("Invalid option!\n\n");
+    break;
   case INVALID_BMP_PREFIX:
     printf("Invalid encoding!\n\n");
-    break;
-  case OUT_OF_MEMORY:
-    printf("Program ran out of memory!\n\n");
     break;
   case CANNOT_OPEN_FILE:
     printf("Cannot open file!\n\n");
     break;
+  case CANNOT_READ_FILE:
+    printf("Cannot read from file!\n\n");
+    break;
+  case CANNOT_WRITE_FILE:
+    printf("Cannot write to file!\n\n");
+    break;
+  case OUT_OF_MEMORY:
+    printf("Program ran out of memory!\n\n");
+    break;
   case MAX_LAYER_COLLECTION_CAPACITY_REACHED:
     printf("Cannot open more than 10 files!\n\n");
-    break;
-  case BITMAP_FILE_CORRUPTED:
-    printf("Bitmap file corrupted!\n\n");
-    break;
-  case SUCCESS:
-    return;
     break;
   default:
     printf("Unknown error occured!\n\n");
