@@ -250,11 +250,10 @@ ErrorCode encode(char* file_path, char* message)
 
       if (fwrite(pixel_buffer + wbuffer_index, sizeof(char), 3, file) != 3)
       {
-        printf("Error occured when writting!! wbuffer_index = %lu\n", wbuffer_index);
         free(pixel_buffer);
         free(message_to_encode);
         fclose(file);
-        exit(-1);
+        return CANNOT_WRITE_FILE;
       }
       
       wbuffer_index += 3;
@@ -264,6 +263,8 @@ ErrorCode encode(char* file_path, char* message)
   }
 
   writting_finished:
+
+  printf("Message successfully encoded!\n");
 
   free(pixel_buffer);
   free(message_to_encode);
