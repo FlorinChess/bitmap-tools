@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define NULL_BYTE 1
+
 typedef enum _ErrorCode_
 {
   SUCCESS,
