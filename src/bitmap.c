@@ -124,7 +124,10 @@ ErrorCode decode(char* file_path)
     return INVALID_BMP_PREFIX;
   }
 
-  printf("Valid encoding\n");
+  printf(
+    "Valid encoding!\n"
+    "Decoding hidden message...\n"
+    );
 
   char length_buffer[5] = {0}; 
   memcpy(length_buffer, bmp_prefix_buffer + 3, 4);
@@ -147,6 +150,7 @@ ErrorCode decode(char* file_path)
   message_buffer[length] = '\0';
 
   printf(
+    "Secret message successfully decoded!\n"
     "--------------------------------------------\n"
     "Message length:  %ld characters\n" 
     "Message content: %s\n"
