@@ -1,6 +1,9 @@
 #ifndef ERROR_H
 #define ERROR_H
 
+#include <stdlib.h>
+#include <stdio.h>
+
 typedef enum _ErrorCode_
 {
   SUCCESS,
@@ -15,5 +18,7 @@ typedef enum _ErrorCode_
   OUT_OF_MEMORY,
   MAX_LAYER_COLLECTION_CAPACITY_REACHED
 } ErrorCode;
+
+void handleIfError(ErrorCode error_code);
 
 #endif // ERROR_H

@@ -1,14 +1,9 @@
 #include "definitions.h"
 #include "bitmap.h"
-#include "error.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
-#include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-#include <sys/types.h>
 
 #ifdef DEBUG
 #include "debug.h"
@@ -110,63 +105,6 @@ void lengthToString(size_t length, char buffer[4])
   buffer[3] = '0' + (length % 10);
 }
 
-ErrorCode parseTextFile(FILE* file)
-{
-  rewind(file);
-
-  size_t width = 1;
-  size_t height = 1;
-
-  while (!feof(file))
-  {
-    if(fgetc(file) == '\n')
-    {
-      height++;
-      continue;
-    }
-
-    if (height ==1)
-      width++; // While reading the first line, determine its length.
-  }
-
-  Layer* new_layer = createLayer(width, height);
-
-  if (new_layer == NULL)
-  {
-    fclose(file);
-    return OUT_OF_MEMORY;
-  }
-
-  rewind(file);
-
-  int row = 0;
-  int column = 0;
-  char character = ' ';
-
-  while (!feof(file))
-  {
-    character = getc(file);
-
-    if (feof(file))
-      break;
-
-    if (character == '\n')
-    {
-      row++;
-      column = 0;
-      continue;
-    }
-
-    new_layer->pixels_[row][column] = character;
-    column++;
-  }
-
-  addLayer(new_layer);
-
-  fclose(file);
-  return SUCCESS;
-}
-
 ErrorCode parseBinaryFile(char* file_path)
 {
   FILE* file = fopen(file_path, "rb");
@@ -174,46 +112,33 @@ ErrorCode parseBinaryFile(char* file_path)
   if (file == NULL)
     return CANNOT_OPEN_FILE;
 
-  uint8_t header[BMP_HEADER_SIZE];
-  size_t fread_return = fread(header, sizeof(uint8_t), BMP_HEADER_SIZE, file);
+  BitmapFileHeader file_header;
+  BitmapInfoHeader info_header;
+  
+  ErrorCode error_code = readBitmapHeaders(file, &file_header, &info_header);
 
-  if (fread_return != sizeof(header))
+  if (error_code != SUCCESS)
   {
     fclose(file);
-    return INVALID_FILE;
+    return error_code;
   }
 
-  // Check magic number
-  if (header[0] != 'B' || header[1] != 'M')
-  {
-    fclose(file);
-    return INVALID_FILE;
-  }
-
-  int width_pixels =  *(int*)&header[0x12]; // 0x12 => 18
-  int height_pixels = *(int*)&header[0x16]; // 0x16 => 22
-  int padding = width_pixels % 4;
-
-  int position_image_array = *(int*) &header[0x0a]; // 0x0a => 10
-
-  fseek(file, position_image_array, SEEK_SET);
-
-  Layer* new_layer = createLayer(width_pixels, height_pixels);
-
+  Layer* new_layer = createLayer(info_header.bitmap_width_, info_header.bitmap_height_);
   if (new_layer == NULL)
   {
     fclose(file);
     return OUT_OF_MEMORY;
   }
 
-  for (int row = 0; row < height_pixels; row++)
+  int padding = info_header.bitmap_width_ % 4;
+  fseek(file, file_header.pixel_array_offset_, SEEK_SET);
+  for (int row = 0; row < info_header.bitmap_height_; row++)
   {
-    for (int column = 0; column < width_pixels; column++)
+    for (int column = 0; column < info_header.bitmap_width_; column++)
     {
       unsigned char buffer[3];
-      fread_return = fread(buffer, sizeof(char), sizeof(buffer), file);
 
-      if (fread_return != sizeof(buffer))
+      if (fread(buffer, sizeof(char), sizeof(buffer), file) != sizeof(buffer))
       {
         free(new_layer);
         fclose(file);
@@ -225,7 +150,7 @@ ErrorCode parseBinaryFile(char* file_path)
       pixel.green_ = buffer[1];
       pixel.red_ = buffer[2];
 
-      new_layer->pixels_[(height_pixels - INDEX_OFFSET) - row][column] = convertGrayscaleToSymbol(pixelRGBToGrayscaleValue(&pixel));
+      new_layer->pixels_[(info_header.bitmap_height_ - INDEX_OFFSET) - row][column] = convertGrayscaleToSymbol(pixelRGBToGrayscaleValue(&pixel));
    }
 
    fseek(file, padding, SEEK_CUR);
@@ -496,47 +421,6 @@ char* getFileExtension(const char* file_path)
     return "";
   }
   return dot + 1;
-}
-
-void handleIfError(ErrorCode error_code)
-{
-  switch (error_code)
-  {
-  case SUCCESS:
-    return;
-    break;
-  case INVALID_FILE:
-    printf("Invalid file(s)!\n\n");
-    break;
-  case INVALID_USAGE:
-    printf("Invalid usage!\n\n");
-    break;
-  case INVALID_OPTION:
-    printf("Invalid option!\n\n");
-    break;
-  case INVALID_BMP_PREFIX:
-    printf("Invalid encoding!\n\n");
-    break;
-  case CANNOT_OPEN_FILE:
-    printf("Cannot open file!\n\n");
-    break;
-  case CANNOT_READ_FILE:
-    printf("Cannot read from file!\n\n");
-    break;
-  case CANNOT_WRITE_FILE:
-    printf("Cannot write to file!\n\n");
-    break;
-  case OUT_OF_MEMORY:
-    printf("Program ran out of memory!\n\n");
-    break;
-  case MAX_LAYER_COLLECTION_CAPACITY_REACHED:
-    printf("Cannot open more than 10 files!\n\n");
-    break;
-  default:
-    printf("Unknown error occured!\n\n");
-    break;
-  }
-  exit(error_code);
 }
 
 ErrorCode checkParameters(char* parameters[], const size_t count)

@@ -1,5 +1,6 @@
 COMPILER      := gcc
 CCFLAGS       := -Wall -Wextra -Werror=format-security -Wuninitialized -Werror=implicit-function-declaration -pedantic -std=c2x -g3 -Og
+SOURCES       := ./src/main.c ./src/bitmap.c ./src/error.c
 PROGRAM       := bmp
 BUILD_FOLDER  := build
 .DEFAULT_GOAL := bin
@@ -16,7 +17,7 @@ bin:			## compiles project to executable binary
 	@echo "[\033[36mINFO\033[0m] Creating build folder..."
 	mkdir -p $(BUILD_FOLDER)
 	@echo "[\033[36mINFO\033[0m] Compiling binary..."
-	$(COMPILER) $(CCFLAGS) -o ./$(BUILD_FOLDER)/$(PROGRAM) ./src/main.c ./src/bitmap.c
+	$(COMPILER) $(CCFLAGS) -o ./$(BUILD_FOLDER)/$(PROGRAM) $(SOURCES)
 	chmod +x ./$(BUILD_FOLDER)/$(PROGRAM)
 
 all: clean bin 	## all of the above
