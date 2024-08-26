@@ -1,6 +1,6 @@
 COMPILER      := gcc
 CCFLAGS       := -Wall -Wextra -Werror=format-security -Wuninitialized -Werror=implicit-function-declaration -pedantic -std=c2x -g3 -Og
-SOURCES       := ./src/main.c ./src/bitmap.c ./src/error.c
+SOURCES       := ./src/main.c ./src/bitmap.c ./src/error.c ./src/layer.c
 PROGRAM       := bmp
 BUILD_FOLDER  := build
 .DEFAULT_GOAL := bin

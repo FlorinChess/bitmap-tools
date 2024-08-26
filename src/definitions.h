@@ -3,67 +3,29 @@
 
 #define INDEX_OFFSET 1
 #define DEFAULT_STRING_SIZE 10
-#define NULL_BYTE 1
 #define BMP_HEADER_SIZE 54
 #define BMP_PREFIX_SIZE 7
 
+#include "error.h"
 #include <stdbool.h>
 #include <stddef.h>
-#include "error.h"
-
-typedef struct
-{
-  int red_;
-  int green_;
-  int blue_;
-} Pixel;
-
-typedef struct
-{
-  size_t width_;
-  size_t height_;
-  char** pixels_;
-} Layer;
-
-typedef struct
-{
-  unsigned count_;
-  Layer* layers_[10];
-} LayerCollection;
-
-void handleIfError(ErrorCode error_code);
 
 ///
-/// This function creates a layer and allocates it on the heap.
-///
-/// @param width The width of the new layer.
-/// @param height The height of the new layer.
-/// @param x The x coordinate of the new layer.
-/// @param y The y cooridnate of the new layer.
-///
-/// @returns The new layer.
-Layer* createLayer(size_t width, size_t height);
-
-///
-/// This function creates a char matrix and allocates it on the heap.
-///
-/// @param width The width of the matrix.
-/// @param height The height of the matrix.
-///
-/// @returns The new matrix.
-char** createLayerPixels(size_t width, size_t height);
-
-///
-/// This function retrievs input from the user as a char* and allocates it on the heap.
+/// @brief This function retrievs input from the user as a char* and allocates it on the heap.
 ///
 /// @returns The user input.
 //
 char* getInput();
 
+/// @brief This function converts a numeric value into a 4-digit string representation.
+///
+/// @param length The number value representing the length of the message.  
+/// @param buffer The buffer in which the resulting string is stored in.
+///
 void lengthToString(size_t length, char buffer[4]);
 
 ///
-/// This function reads a .bmp file and creates a layer of all the pixels in it converted to ASCII characters.
+/// @brief This function reads a .bmp file and creates a layer of all the pixels in it converted to ASCII characters.
 /// The new layer is added to the layer collection.
 ///
 /// @param file The .bmp file.
@@ -74,66 +36,39 @@ void lengthToString(size_t length, char buffer[4]);
 ///   SUCCESS
 ErrorCode parseBinaryFile(char* file_path);
 
-///
-/// This function saves a layer to a .txt file.
-///
-/// @param file_path The name of the save file.
-/// @param layer The layer to be saved.
-///
-ErrorCode saveLayerToFile(char* file_path, int layer_index);
 
+/// @brief This function returns the fully qualified file path of a given file without the file extension.
 ///
-/// This function adds a new layer to the layer collection.
+/// @param file_path The full file path containing the file extension.
+/// @return The full file path without the extension.
 ///
-/// @param layer_collection The layer collection.
-/// @param new_layer The new layer to be added.
-///
-/// @returns The error code:
-///   OUT_OF_MEMROY
-///   SUCCESS
-ErrorCode addLayer(Layer* new_layer);
-
-///
-/// This function frees a given layer.
-///
-/// @param layer The layer to be freed.
-///
-void freeLayer(Layer* layer);
-
-///
-/// This function frees the layer collection.
-///
-/// @param layer_collection The layer collection.
-///
-void freeLayerCollection();
-
-///
-/// This function converts the rgb values of a pixel to grayscale.
-///
-/// @param pixel The pixel.
-///
-/// @returns The grayscale value.
-int pixelRGBToGrayscaleValue(Pixel* pixel);
-
-///
-/// This function converts the grayscale value to the coresponding ASCII symbol.
-///
-/// @param grayscale_value The grayscale value.
-///
-/// @returns The ASCII symbol.
-///
-char convertGrayscaleToSymbol(int grayscale_value);
-
 char* getFilePathWithoutExtension(char* file_path);
 
+///
+/// @brief This function checks if a character represents a digit from 0 to 9.
+///
+/// @param character The character to check.
+///
+/// @return True if the parameter represents a digit from 0 to 9.
+///
 bool isCharNumber(char character);
 
 int cp(const char* to, const char* from);
 
+///
+/// @brief This function prints a short description description of the program
+/// and all available options and their effects.
+///
 void printHelpMessage();
 
-void handleIfError(ErrorCode error_code);
-
+/// @brief This function checks wheather the given command line parameters are valid.
+/// 
+/// @param parameters An array of char pointers that contains the command 
+/// line parameters starting from the third command line parameter.
+/// @param count The number of elements in the parameters array. 
+///
+/// @return INVALID_USAGE if the number of arguments is less then 3,
+///         INVALID_FILE if the given file paths do not point to files with the .bmp file extension, otherwise SUCCESS.
 ErrorCode checkParameters(char* parameters[], const size_t count);
 
 bool isUserInputValid(char* user_input);

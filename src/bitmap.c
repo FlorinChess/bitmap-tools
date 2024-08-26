@@ -1,14 +1,5 @@
 #include "definitions.h"
 #include "bitmap.h"
-#include "error.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
-#include <sys/types.h>
 
 bool isBitmapPrefixValid(char bitmap_prefix[BMP_PREFIX_SIZE])
 {

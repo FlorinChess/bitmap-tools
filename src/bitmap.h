@@ -2,7 +2,9 @@
 #define BITMAP_H
 
 #include "error.h"
-#include "stdio.h"
+#include "layer.h"
+#include <string.h>
+#include <sys/types.h>
 
 #define BMP_PREFIX_SIZE 7
 #define BMP_MAGIC_WORD "BM"
