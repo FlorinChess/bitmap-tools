@@ -2,6 +2,7 @@
 pictures/*.txt
 build
 *.bmp
+*.txt
 
 # exclude test files for now
 test.c
