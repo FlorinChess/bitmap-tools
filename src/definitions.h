@@ -24,19 +24,6 @@ char* getInput();
 ///
 void lengthToString(size_t length, char buffer[4]);
 
-///
-/// @brief This function reads a .bmp file and creates a layer of all the pixels in it converted to ASCII characters.
-/// The new layer is added to the layer collection.
-///
-/// @param file The .bmp file.
-/// @param layer_collection The layer collection
-///
-/// @returns The error code:
-///   OUT_OF_MEMROY
-///   SUCCESS
-ErrorCode parseBinaryFile(char* file_path);
-
-
 /// @brief This function returns the fully qualified file path of a given file without the file extension.
 ///
 /// @param file_path The full file path containing the file extension.

@@ -1,7 +1,7 @@
 #include "definitions.h"
 #include "bitmap.h"
 
-bool isBitmapPrefixValid(char bitmap_prefix[BMP_PREFIX_SIZE])
+bool isBitmapPrefixValid(const char bitmap_prefix[BMP_PREFIX_SIZE])
 {
   printf("Checking encoding...\n");
 
@@ -57,7 +57,7 @@ ErrorCode readBitmapHeaders(FILE* file, BitmapFileHeader* file_header, BitmapInf
   return SUCCESS;
 }
 
-ErrorCode decode(char* file_path)
+ErrorCode decode(const char* file_path)
 {
   FILE* file = fopen(file_path, "rb");
 
@@ -154,7 +154,7 @@ ErrorCode decode(char* file_path)
   return SUCCESS;
 }
 
-ErrorCode encode(char* file_path, char* message)
+ErrorCode encode(const char* file_path, const char* message)
 {
   // Subject to change
   char* output_file = "output.bmp"; 
@@ -263,6 +263,60 @@ ErrorCode encode(char* file_path, char* message)
 
   free(pixel_buffer);
   free(message_to_encode);
+  fclose(file);
+
+  return SUCCESS;
+}
+
+ErrorCode convertBitmapToASCII(const char* file_path)
+{
+  FILE* file = fopen(file_path, "rb");
+
+  if (file == NULL)
+    return CANNOT_OPEN_FILE;
+
+  BitmapFileHeader file_header;
+  BitmapInfoHeader info_header;
+  
+  ErrorCode error_code = readBitmapHeaders(file, &file_header, &info_header);
+
+  if (error_code != SUCCESS)
+  {
+    fclose(file);
+    return error_code;
+  }
+
+  Layer* new_layer = createLayer(info_header.bitmap_width_, info_header.bitmap_height_);
+  if (new_layer == NULL)
+  {
+    fclose(file);
+    return OUT_OF_MEMORY;
+  }
+
+  int padding = info_header.bitmap_width_ % 4;
+  fseek(file, file_header.pixel_array_offset_, SEEK_SET);
+  for (int row = 0; row < info_header.bitmap_height_; row++)
+  {
+    for (int column = 0; column < info_header.bitmap_width_; column++)
+    {
+      Pixel pixel;
+      if (fread(&pixel, sizeof(char), sizeof(Pixel), file) != sizeof(Pixel))
+      {
+        free(new_layer);
+        fclose(file);
+        return CANNOT_READ_FILE;
+      }
+
+#ifdef DEBUG
+      printf("b:%u, g:%u, r:%u\n", pixel.blue_, pixel.green_, pixel.red_);
+#endif
+      new_layer->pixels_[(info_header.bitmap_height_ - INDEX_OFFSET) - row][column] = convertGrayscaleToSymbol(convertPixelToGrayscale(&pixel));
+   }
+
+   fseek(file, padding, SEEK_CUR);
+  }
+  addLayer(new_layer);
+
   fclose(file);
 
   return SUCCESS;

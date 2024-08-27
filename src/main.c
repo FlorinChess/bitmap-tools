@@ -55,59 +55,6 @@ void lengthToString(size_t length, char buffer[4])
   buffer[3] = '0' + (length % 10);
 }
 
-ErrorCode parseBinaryFile(char* file_path)
-{
-  FILE* file = fopen(file_path, "rb");
-
-  if (file == NULL)
-    return CANNOT_OPEN_FILE;
-
-  BitmapFileHeader file_header;
-  BitmapInfoHeader info_header;
-  
-  ErrorCode error_code = readBitmapHeaders(file, &file_header, &info_header);
-
-  if (error_code != SUCCESS)
-  {
-    fclose(file);
-    return error_code;
-  }
-
-  Layer* new_layer = createLayer(info_header.bitmap_width_, info_header.bitmap_height_);
-  if (new_layer == NULL)
-  {
-    fclose(file);
-    return OUT_OF_MEMORY;
-  }
-
-  int padding = info_header.bitmap_width_ % 4;
-  fseek(file, file_header.pixel_array_offset_, SEEK_SET);
-  for (int row = 0; row < info_header.bitmap_height_; row++)
-  {
-    for (int column = 0; column < info_header.bitmap_width_; column++)
-    {
-      Pixel pixel;
-      if (fread(&pixel, sizeof(char), sizeof(Pixel), file) != sizeof(Pixel))
-      {
-        free(new_layer);
-        fclose(file);
-        return INVALID_FILE;
-      }
-
-      printf("b:%u, g:%u, r:%u\n", pixel.blue_, pixel.green_, pixel.red_);
-
-      new_layer->pixels_[(info_header.bitmap_height_ - INDEX_OFFSET) - row][column] = convertGrayscaleToSymbol(convertPixelToGrayscale(&pixel));
-   }
-
-   fseek(file, padding, SEEK_CUR);
-  }
-  addLayer(new_layer);
-
-  fclose(file);
-
-  return SUCCESS;
-}
-
 char* getFilePathWithoutExtension(char* file_path)
 {
   for (size_t i = 0; file_path[i] != '\0'; i++)
@@ -231,7 +178,7 @@ ErrorCode convertFilesToASCII(char* file_paths[])
 {
   for (size_t i = 0; file_paths[i] != NULL; ++i)
   {
-    handleIfError(parseBinaryFile(file_paths[i]));
+    handleIfError(convertBitmapToASCII(file_paths[i]));
 
     char* filename = getFilePathWithoutExtension(file_paths[i]);
 
