@@ -5,9 +5,9 @@
 
 typedef struct _Pixel_
 {
-  unsigned char red_;
-  unsigned char green_;
   unsigned char blue_;
+  unsigned char green_;
+  unsigned char red_;
 } __attribute__((__packed__)) Pixel;
 
 typedef struct _Layer_

@@ -86,19 +86,15 @@ ErrorCode parseBinaryFile(char* file_path)
   {
     for (int column = 0; column < info_header.bitmap_width_; column++)
     {
-      unsigned char buffer[3];
-
-      if (fread(buffer, sizeof(char), sizeof(buffer), file) != sizeof(buffer))
+      Pixel pixel;
+      if (fread(&pixel, sizeof(char), sizeof(Pixel), file) != sizeof(Pixel))
       {
         free(new_layer);
         fclose(file);
         return INVALID_FILE;
       }
 
-      Pixel pixel;
-      pixel.blue_ = buffer[0];
-      pixel.green_ = buffer[1];
-      pixel.red_ = buffer[2];
+      printf("b:%u, g:%u, r:%u\n", pixel.blue_, pixel.green_, pixel.red_);
 
       new_layer->pixels_[(info_header.bitmap_height_ - INDEX_OFFSET) - row][column] = convertGrayscaleToSymbol(convertPixelToGrayscale(&pixel));
    }
