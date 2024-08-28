@@ -9,7 +9,7 @@ void printBinary(unsigned char byte)
   printf("\n");
 }
 
-void printHexValues(const unsigned char *array, unsigned char length) 
+void printHexValues(const unsigned char *array, const unsigned char length) 
 {
   for (unsigned long i = 0; i < length; ++i)
   {

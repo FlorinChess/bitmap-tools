@@ -3,6 +3,6 @@
 
 void printBinary(unsigned char byte);
 
-void printHexValues(unsigned char *array, unsigned char length);
+void printHexValues(const unsigned char *array, const unsigned char length);
 
 #endif // DEBUG_H

@@ -1,7 +1,6 @@
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
 
-#define INDEX_OFFSET 1
 #define DEFAULT_STRING_SIZE 10
 #define BMP_HEADER_SIZE 54
 #define BMP_PREFIX_SIZE 7
@@ -9,6 +8,9 @@
 #include "error.h"
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
+#include <fcntl.h>
+#include <sys/types.h>
 
 ///
 /// @brief This function retrievs input from the user as a char* and allocates it on the heap.
@@ -17,37 +19,13 @@
 //
 char* getInput();
 
-/// @brief This function converts a numeric value into a 4-digit string representation.
-///
-/// @param length The number value representing the length of the message.  
-/// @param buffer The buffer in which the resulting string is stored in.
-///
-void lengthToString(size_t length, char buffer[4]);
-
-/// @brief This function returns the fully qualified file path of a given file without the file extension.
-///
-/// @param file_path The full file path containing the file extension.
-/// @return The full file path without the extension.
-///
-char* getFilePathWithoutExtension(char* file_path);
-
-///
-/// @brief This function checks if a character represents a digit from 0 to 9.
-///
-/// @param character The character to check.
-///
-/// @return True if the parameter represents a digit from 0 to 9.
-///
-bool isCharNumber(char character);
-
-int cp(const char* to, const char* from);
-
 ///
 /// @brief This function prints a short description description of the program
 /// and all available options and their effects.
 ///
 void printHelpMessage();
 
+/// 
 /// @brief This function checks wheather the given command line parameters are valid.
 /// 
 /// @param parameters An array of char pointers that contains the command 
@@ -58,6 +36,13 @@ void printHelpMessage();
 ///         INVALID_FILE if the given file paths do not point to files with the .bmp file extension, otherwise SUCCESS.
 ErrorCode checkParameters(char* parameters[], const size_t count);
 
+/// 
+/// @brief This function checks if the given message is valid for encoding into the .bmp file.
+/// 
+/// @param user_input The message to be encoded.
+/// 
+/// @return False if the message length is 0 or greater than the maximum message length possible for the bitmap file.
+/// 
 bool isUserInputValid(char* user_input);
 
 #endif // DEFINITIONS_H

@@ -1,6 +1,7 @@
 COMPILER      := gcc
 CCFLAGS       := -Wall -Wextra -Werror=format-security -Wuninitialized -Werror=implicit-function-declaration -pedantic -std=c2x
-SOURCES       := ./src/main.c ./src/bitmap.c ./src/error.c ./src/layer.c
+DEBUGFLAGS    := -g3 -Og -D DEBUG
+SOURCES       := ./src/main.c ./src/bitmap.c ./src/error.c ./src/layer.c ./src/utils.c
 PROGRAM       := bmp
 BUILD_FOLDER  := build
 .DEFAULT_GOAL := bin
@@ -24,7 +25,7 @@ debug:
 	@echo "[\033[36mINFO\033[0m] Creating build folder..."
 	mkdir -p $(BUILD_FOLDER)
 	@echo "[\033[36mINFO\033[0m] Compiling binary with debug flags..."
-	$(COMPILER) $(CCFLAGS) -g3 -Og -D DEBUG -o ./$(BUILD_FOLDER)/$(PROGRAM) $(SOURCES)
+	$(COMPILER) $(CCFLAGS) $(DEBUGFLAGS) -o ./$(BUILD_FOLDER)/$(PROGRAM) $(SOURCES) ./src/debug.c
 	chmod +x ./$(BUILD_FOLDER)/$(PROGRAM)
 
 all: clean bin 	## all of the above

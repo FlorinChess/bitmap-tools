@@ -1,4 +1,4 @@
-#include "definitions.h"
+#include "utils.h"
 #include "bitmap.h"
 
 bool isBitmapPrefixValid(const char bitmap_prefix[BMP_PREFIX_SIZE])
@@ -159,7 +159,7 @@ ErrorCode encode(const char* file_path, const char* message)
   // Subject to change
   char* output_file = "output.bmp"; 
 
-  cp(output_file, file_path);
+  copy(file_path, output_file);
 
   FILE* file = fopen(output_file, "rb+");
 
