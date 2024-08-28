@@ -1,5 +1,5 @@
 COMPILER      := gcc
-CCFLAGS       := -Wall -Wextra -Werror=format-security -Wuninitialized -Werror=implicit-function-declaration -pedantic -std=c2x -g3 -Og
+CCFLAGS       := -Wall -Wextra -Werror=format-security -Wuninitialized -Werror=implicit-function-declaration -pedantic -std=c2x
 SOURCES       := ./src/main.c ./src/bitmap.c ./src/error.c ./src/layer.c
 PROGRAM       := bmp
 BUILD_FOLDER  := build
@@ -18,6 +18,13 @@ bin:			## compiles project to executable binary
 	mkdir -p $(BUILD_FOLDER)
 	@echo "[\033[36mINFO\033[0m] Compiling binary..."
 	$(COMPILER) $(CCFLAGS) -o ./$(BUILD_FOLDER)/$(PROGRAM) $(SOURCES)
+	chmod +x ./$(BUILD_FOLDER)/$(PROGRAM)
+
+debug:
+	@echo "[\033[36mINFO\033[0m] Creating build folder..."
+	mkdir -p $(BUILD_FOLDER)
+	@echo "[\033[36mINFO\033[0m] Compiling binary with debug flags..."
+	$(COMPILER) $(CCFLAGS) -g3 -Og -D DEBUG -o ./$(BUILD_FOLDER)/$(PROGRAM) $(SOURCES)
 	chmod +x ./$(BUILD_FOLDER)/$(PROGRAM)
 
 all: clean bin 	## all of the above
